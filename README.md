@@ -64,14 +64,62 @@
 
     grep admin /etc/group
 
-## Создадим [файл-скрипт]() для контроля доступа в выходные и праздничные дни:
+## Создадим файл-скрипт для контроля доступа в выходные и праздничные дни:
 
-    sudo nano /usr/local/bin/login.sh
+1. Скрипт
+     
+       sudo nano /usr/local/bin/login.sh
+________________________________________________________________
+
+    #!/bin/bash
+    #Первое условие: если день недели суббота или воскресенье
+    if [ $(date +%a) = "Sat" ] || [ $(date +%a) = "Sun" ]; then
+     #Второе условие: входит ли пользователь в группу admin
+     if getent group admin | grep -qw "$PAM_USER"; then
+          #Если пользователь входит в группу admin, то он может подключиться
+          exit 0
+         else
+          #Иначе ошибка (не сможет подключиться)
+          exit 1
+        fi
+       #Если день не выходной, то подключиться может любой пользователь
+       else
+        exit 0
+    fi
 
 
+2. Добавим права на исполнение файла:
+  
+       chmod +x /usr/local/bin/login.sh
     
 
+3. Укажем в файле /etc/pam.d/sshd модуль pam_exec и наш скрипт:
+
+       sudo nano /etc/pam.d/sshd
+
+<img width="656" height="94" alt="Снимок экрана от 2026-10-18 21-40-27" src="https://github.com/user-attachments/assets/cf494e10-9c7e-4b6a-9a06-3c9d9202cc30" />
+
+## Проверка работы доступа в выходные дни:
+
+1. Установим дату выходного дня: 
+
+       sudo timedatectl set-ntp false
+ ______________________________________________
+    
+       sudo timedatectl set-time '2026-10-18 21:43:00'
+
+2. Проверим подключение:
+
+   <img width="689" height="241" alt="Снимок экрана от 2026-10-20 21-56-35" src="https://github.com/user-attachments/assets/17886bc4-8a7f-4bd4-84d2-822c67a9b187" />
+
+       ssh otus@192.168.57.10
+
+
+<img width="680" height="801" alt="Снимок экрана от 2026-10-18 17-30-54" src="https://github.com/user-attachments/assets/5560a61a-7ee1-41bf-a8ca-1fb59185caef" />
+
+     ssh otusadm@192.168.57.10
 
 
 
+   
     
